@@ -1,0 +1,3 @@
+node_modules/
+integration-test/configs/*.yml
+!integration-test/configs/*.template.yml

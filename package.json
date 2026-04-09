@@ -1,0 +1,10 @@
+{
+  "name": "bulk-github-repo-settings-sync-action-live-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "js-yaml": "^4.1.1"
+  }
+}

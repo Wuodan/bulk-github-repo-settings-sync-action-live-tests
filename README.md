@@ -1,0 +1,67 @@
+# Live Integration Tests
+
+Live integration tests for [`joshjohanning/bulk-github-repo-settings-sync-action`](https://github.com/joshjohanning/bulk-github-repo-settings-sync-action).
+
+These tests run against real repositories in a dedicated disposable test organization, verifying both action outputs and resulting GitHub state.
+
+> Adapted from [Wuodan's live test harness](https://github.com/joshjohanning/bulk-github-repo-settings-sync-action/pull/123).
+
+## How it works
+
+1. **Prepare** — Creates/resets ~30 repos in the test org to known baseline states
+2. **Run** — Runs the action against those repos (dry-run first, then for real)
+3. **Assert** — Verifies the action outputs and actual GitHub state via API
+
+## Usage
+
+Go to **Actions → Live Integration Tests → Run workflow** and provide:
+
+| Input | Description |
+|-------|-------------|
+| `ref` | Branch, tag, or SHA from the action repo to test (default: `main`) |
+| `pr` | PR number to test (overrides `ref`) |
+| `suite` | `all`, `main`, `selection`, or `failure` |
+| `prepare-only` | Only prepare repos, skip running tests |
+
+### Examples
+
+- Test main branch: leave defaults
+- Test a PR: set `pr` to `123`
+- Test a specific branch: set `ref` to `refactor/normalize-result-model`
+
+## Setup
+
+### Test Organization
+
+Create a dedicated GitHub organization for tests. Every repository in it should be considered temporary.
+
+### Authentication
+
+**Option A: GitHub App (recommended)**
+
+1. Create a GitHub App with the permissions listed below
+2. Install it on the test org only
+3. Set these in this repository:
+   - Variable `LIVE_TEST_APP_ID` — the App ID
+   - Secret `LIVE_TEST_APP_PRIVATE_KEY` — the App private key
+
+**Option B: Fine-grained PAT**
+
+1. Create a PAT scoped to the test org with "All repositories" access
+2. Set secret `LIVE_TEST_ORG_GH_TOKEN` in this repository
+
+### Required Permissions
+
+- **Administration**: Read & write (create repos, settings, topics)
+- **Contents**: Read & write (create/update/delete files)
+- **Pull requests**: Read & write (PR-based file sync)
+- **Workflows**: Read & write (sync `.github/workflows/`)
+- **Custom properties** (org-level): Admin (repo selection tests)
+
+### Repository Configuration
+
+- Variable `LIVE_TEST_ORG` — name of the test organization
+
+## Cleanup
+
+Use the **Delete Live Integration Test Repositories** workflow to remove all repos from the test org. Triple-guarded with confirmation inputs.
