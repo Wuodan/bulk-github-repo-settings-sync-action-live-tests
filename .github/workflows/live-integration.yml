@@ -32,6 +32,8 @@ concurrency:
   group: live-integration
   cancel-in-progress: false
 
+run-name: "Live Tests: ${{ inputs.pr && format('PR #{0}', inputs.pr) || inputs.ref || 'main' }} (${{ inputs.suite }})"
+
 env:
   ACTION_REPO: joshjohanning/bulk-github-repo-settings-sync-action
 
@@ -58,6 +60,18 @@ jobs:
 
       - name: Log resolved ref
         run: echo "Testing action at ${{ steps.resolve.outputs.display }}"
+
+      - name: Write job summary
+        run: |
+          echo "## 🧪 Live Integration Test Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Action ref** | \`${{ steps.resolve.outputs.ref }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Display** | ${{ steps.resolve.outputs.display }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Suite** | \`${{ inputs.suite }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Prepare only** | \`${{ inputs.prepare-only }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Action repo** | [${{ env.ACTION_REPO }}](https://github.com/${{ env.ACTION_REPO }}/tree/${{ steps.resolve.outputs.ref }}) |" >> $GITHUB_STEP_SUMMARY
 
   prepare-main:
     if: ${{ inputs.suite == 'all' || inputs.suite == 'main' }}
