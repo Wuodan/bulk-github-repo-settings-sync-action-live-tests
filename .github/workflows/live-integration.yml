@@ -67,11 +67,12 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| **Action ref** | \`${{ steps.resolve.outputs.ref }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Display** | ${{ steps.resolve.outputs.display }} |" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ inputs.pr }}" ]; then
+            echo "| **PR** | <a href=\"https://github.com/${{ env.ACTION_REPO }}/pull/${{ inputs.pr }}\">#${{ inputs.pr }}</a> |" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "| **Action ref** | <a href=\"https://github.com/${{ env.ACTION_REPO }}/tree/${{ steps.resolve.outputs.ref }}\">${{ steps.resolve.outputs.ref }}</a> |" >> $GITHUB_STEP_SUMMARY
           echo "| **Suite** | \`${{ inputs.suite }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Prepare only** | \`${{ inputs.prepare-only }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Action repo** | [${{ env.ACTION_REPO }}](https://github.com/${{ env.ACTION_REPO }}/tree/${{ steps.resolve.outputs.ref }}) |" >> $GITHUB_STEP_SUMMARY
 
   prepare-main:
     if: ${{ inputs.suite == 'all' || inputs.suite == 'main' }}
