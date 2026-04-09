@@ -72,7 +72,6 @@ jobs:
 
       - name: Generate integration token
         id: auth
-        if: vars.LIVE_TEST_APP_ID != ''
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.LIVE_TEST_APP_ID }}
@@ -101,7 +100,7 @@ jobs:
 
       - name: Prepare main live test repositories
         env:
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           INTEGRATION_REPOSITORIES_FILE: integration-test/configs/repos.prepare.yml
         run: node integration-test/scripts/prepare-live-test-repositories.js
@@ -128,7 +127,6 @@ jobs:
 
       - name: Generate integration token
         id: auth
-        if: vars.LIVE_TEST_APP_ID != ''
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.LIVE_TEST_APP_ID }}
@@ -160,14 +158,14 @@ jobs:
         id: live-sync-dry-run
         uses: ./action/
         with:
-          github-token: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           github-api-url: ${{ github.api_url }}
           repositories-file: ./integration-test/configs/repos.dry-run.yml
           dry-run: true
 
       - name: Assert dry-run live integration results
         env:
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           INTEGRATION_REPOSITORIES_FILE: integration-test/configs/repos.dry-run.yml
           ACTION_UPDATED_REPOSITORIES: ${{ steps.live-sync-dry-run.outputs['updated-repositories'] }}
@@ -182,13 +180,13 @@ jobs:
         id: live-sync
         uses: ./action/
         with:
-          github-token: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           github-api-url: ${{ github.api_url }}
           repositories-file: ./integration-test/configs/repos.yml
 
       - name: Assert live integration results
         env:
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           INTEGRATION_REPOSITORIES_FILE: integration-test/configs/repos.yml
           ACTION_UPDATED_REPOSITORIES: ${{ steps.live-sync.outputs['updated-repositories'] }}
@@ -215,7 +213,6 @@ jobs:
 
       - name: Generate integration token
         id: auth
-        if: vars.LIVE_TEST_APP_ID != ''
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.LIVE_TEST_APP_ID }}
@@ -244,7 +241,7 @@ jobs:
 
       - name: Prepare repo selection test repositories
         env:
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           INTEGRATION_REPOSITORIES_FILE: integration-test/configs/repos.selection.prepare.yml
         run: node integration-test/scripts/prepare-live-test-repositories.js
@@ -271,7 +268,6 @@ jobs:
 
       - name: Generate integration token
         id: auth
-        if: vars.LIVE_TEST_APP_ID != ''
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.LIVE_TEST_APP_ID }}
@@ -303,7 +299,7 @@ jobs:
         id: selection-list
         uses: ./action/
         with:
-          github-token: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           github-api-url: ${{ github.api_url }}
           repositories: ${{ vars.LIVE_TEST_ORG }}/it-select-list-a,${{ vars.LIVE_TEST_ORG }}/it-select-list-b
           topics: selection-list
@@ -312,7 +308,7 @@ jobs:
         env:
           LIVE_TEST_ORG: ${{ vars.LIVE_TEST_ORG }}
           SELECTION_SCENARIO: selection-list
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           ACTION_UPDATED_REPOSITORIES: ${{ steps.selection-list.outputs['updated-repositories'] }}
           ACTION_CHANGED_REPOSITORIES: ${{ steps.selection-list.outputs['changed-repositories'] }}
@@ -326,7 +322,7 @@ jobs:
         id: selection-custom-property
         uses: ./action/
         with:
-          github-token: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           github-api-url: ${{ github.api_url }}
           owner: ${{ vars.LIVE_TEST_ORG }}
           custom-property-name: live_test_selector
@@ -337,7 +333,7 @@ jobs:
         env:
           LIVE_TEST_ORG: ${{ vars.LIVE_TEST_ORG }}
           SELECTION_SCENARIO: selection-custom-property
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           ACTION_UPDATED_REPOSITORIES: ${{ steps.selection-custom-property.outputs['updated-repositories'] }}
           ACTION_CHANGED_REPOSITORIES: ${{ steps.selection-custom-property.outputs['changed-repositories'] }}
@@ -351,7 +347,7 @@ jobs:
         id: selection-rules-repos
         uses: ./action/
         with:
-          github-token: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           github-api-url: ${{ github.api_url }}
           repositories-file: ./integration-test/configs/repo-selection.rules.repos.yml
 
@@ -359,7 +355,7 @@ jobs:
         env:
           LIVE_TEST_ORG: ${{ vars.LIVE_TEST_ORG }}
           SELECTION_SCENARIO: selection-rules-repos
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           ACTION_UPDATED_REPOSITORIES: ${{ steps.selection-rules-repos.outputs['updated-repositories'] }}
           ACTION_CHANGED_REPOSITORIES: ${{ steps.selection-rules-repos.outputs['changed-repositories'] }}
@@ -373,7 +369,7 @@ jobs:
         id: selection-all
         uses: ./action/
         with:
-          github-token: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           github-api-url: ${{ github.api_url }}
           repositories: all
           owner: ${{ vars.LIVE_TEST_ORG }}
@@ -383,7 +379,7 @@ jobs:
         env:
           LIVE_TEST_ORG: ${{ vars.LIVE_TEST_ORG }}
           SELECTION_SCENARIO: selection-all
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           ACTION_UPDATED_REPOSITORIES: ${{ steps.selection-all.outputs['updated-repositories'] }}
           ACTION_CHANGED_REPOSITORIES: ${{ steps.selection-all.outputs['changed-repositories'] }}
@@ -397,7 +393,7 @@ jobs:
         id: selection-rules-all-and-property
         uses: ./action/
         with:
-          github-token: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           github-api-url: ${{ github.api_url }}
           repositories-file: ./integration-test/configs/repo-selection.rules.all.yml
 
@@ -405,7 +401,7 @@ jobs:
         env:
           LIVE_TEST_ORG: ${{ vars.LIVE_TEST_ORG }}
           SELECTION_SCENARIO: selection-rules-all-and-property
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           ACTION_UPDATED_REPOSITORIES: ${{ steps.selection-rules-all-and-property.outputs['updated-repositories'] }}
           ACTION_CHANGED_REPOSITORIES: ${{ steps.selection-rules-all-and-property.outputs['changed-repositories'] }}
@@ -431,7 +427,6 @@ jobs:
 
       - name: Generate integration token
         id: auth
-        if: vars.LIVE_TEST_APP_ID != ''
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.LIVE_TEST_APP_ID }}
@@ -458,7 +453,7 @@ jobs:
 
       - name: Prepare failure test repositories
         env:
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           INTEGRATION_REPOSITORIES_FILE: integration-test/configs/repos.failure.prepare.yml
         run: node integration-test/scripts/prepare-live-test-repositories.js
@@ -485,7 +480,6 @@ jobs:
 
       - name: Generate integration token
         id: auth
-        if: vars.LIVE_TEST_APP_ID != ''
         uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ vars.LIVE_TEST_APP_ID }}
@@ -515,7 +509,7 @@ jobs:
         id: live-sync-failures
         uses: ./action/
         with:
-          github-token: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          github-token: ${{ steps.auth.outputs.token }}
           github-api-url: ${{ github.api_url }}
           repositories-file: ./integration-test/configs/repos.failure.yml
 
@@ -532,7 +526,7 @@ jobs:
 
       - name: Assert failure scenario results
         env:
-          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token || secrets.LIVE_TEST_ORG_GH_TOKEN }}
+          INTEGRATION_GH_TOKEN: ${{ steps.auth.outputs.token }}
           INTEGRATION_API_URL: ${{ github.api_url }}
           INTEGRATION_REPOSITORIES_FILE: integration-test/configs/repos.failure.yml
           ACTION_UPDATED_REPOSITORIES: ${{ steps.live-sync-failures.outputs['updated-repositories'] }}

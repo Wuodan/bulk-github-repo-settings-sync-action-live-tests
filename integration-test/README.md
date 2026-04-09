@@ -24,19 +24,10 @@ Requirements for that organization:
 - Every repository in it should be considered temporary.
 - Do not store anything important there.
 
-### Token for the Test Org
+### Authentication
 
-In your own GitHub accounts settings, create a PAT (fine-grained personal access token).
+Create a GitHub App installed on the test org only, with the following permissions:
 
-The token should be created for the test org and have access to all
-repositories in it.
-
-Required token permissions:
-
-- Resource owner:
-  - `Test Org` (the name of your test org)
-- Repository access:
-  - `All repositories`
 - Repository permissions:
   - `Administration: Read and write`
     - required for creating repos and changing repository settings/topics
@@ -50,29 +41,11 @@ Required token permissions:
   - `Custom properties: Admin`
     - required because the repo-selection suite creates the custom-property schema and assigns repo values
 
-### Setup in this action repository
+### Setup in this repository
 
-In this action repository where the tests are run:
-
-- Add a repository variable named `LIVE_TEST_ORG`.
-- Add a fine-grained PAT secret named `LIVE_TEST_ORG_GH_TOKEN`.
-
-`LIVE_TEST_ORG` is the repository variable name.
-Its value must be the exact name of that dedicated test organization.
-
-### Alternative: GitHub App (recommended for OSS)
-
-Instead of a PAT, you can use a GitHub App installed only on the test org.
-This limits the blast radius if the token is ever exposed.
-
-1. Create a GitHub App with the same permissions listed above.
-2. Install it on the test org only.
-3. In this repository, set:
-   - Variable `LIVE_TEST_APP_ID` — the App ID
-   - Secret `LIVE_TEST_APP_PRIVATE_KEY` — the App private key
-
-When `LIVE_TEST_APP_ID` is configured, the workflow generates an
-installation token automatically and uses it instead of `LIVE_TEST_ORG_GH_TOKEN`.
+- Variable `LIVE_TEST_ORG` — name of the test organization
+- Variable `LIVE_TEST_APP_ID` — the GitHub App ID
+- Secret `LIVE_TEST_APP_PRIVATE_KEY` — the GitHub App private key
 
 ## Usage
 

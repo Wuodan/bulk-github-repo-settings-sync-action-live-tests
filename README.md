@@ -37,18 +37,11 @@ Create a dedicated GitHub organization for tests. Every repository in it should 
 
 ### Authentication
 
-**Option A: GitHub App (recommended)**
+Create a GitHub App with the permissions listed below, installed on the test org only.
 
-1. Create a GitHub App with the permissions listed below
-2. Install it on the test org only
-3. Set these in this repository:
-   - Variable `LIVE_TEST_APP_ID` — the App ID
-   - Secret `LIVE_TEST_APP_PRIVATE_KEY` — the App private key
-
-**Option B: Fine-grained PAT**
-
-1. Create a PAT scoped to the test org with "All repositories" access
-2. Set secret `LIVE_TEST_ORG_GH_TOKEN` in this repository
+In this repository, set:
+- Variable `LIVE_TEST_APP_ID` — the App ID
+- Secret `LIVE_TEST_APP_PRIVATE_KEY` — the App private key
 
 ### Required Permissions
 
