@@ -313,6 +313,7 @@ async function assertGitignoreRepo(octokit, repoFullName, result) {
 async function assertRulesetsRepo(octokit, repoFullName, result) {
   const managedRuleset = await getRulesetByName(octokit, repoFullName, 'Integration Branch Protection');
   const obsoleteRuleset = await getRulesetByName(octokit, repoFullName, 'Obsolete Integration Ruleset');
+  const rulesetSubResults = (result.subResults || []).filter(subResult => subResult.kind.startsWith('ruleset-'));
 
   assert(managedRuleset, `${repoFullName} should have the managed ruleset`);
   assert(obsoleteRuleset === null, `${repoFullName} should not have the obsolete ruleset anymore`);
@@ -322,11 +323,16 @@ async function assertRulesetsRepo(octokit, repoFullName, result) {
   assert(result.rulesetSync?.ruleset === 'created', `${repoFullName} ruleset sync should report created`);
   assert(result.rulesetSync?.rulesetId === managedRuleset.id, `${repoFullName} should report managed ruleset ID`);
   assert(
+    result.rulesetSync?.deletedRulesets?.length === 1,
+    `${repoFullName} should report exactly one deleted unmanaged repo ruleset`
+  );
+  assert(
     result.rulesetSync?.deletedRulesets?.some(
       ruleset => ruleset.name === 'Obsolete Integration Ruleset' && ruleset.deleted
     ),
     `${repoFullName} should report the obsolete ruleset as deleted`
   );
+  assert(rulesetSubResults.length === 2, `${repoFullName} should report exactly two ruleset sub-results`);
   const createSubResult = assertSubResult(repoFullName, result, 'ruleset-create', 'changed', {
     rulesetName: 'Integration Branch Protection'
   });
@@ -346,6 +352,7 @@ async function assertRulesetsRepo(octokit, repoFullName, result) {
 async function assertRulesetsUpdateRepo(octokit, repoFullName, result) {
   const managedRuleset = await getRulesetByName(octokit, repoFullName, 'Integration Branch Protection');
   const obsoleteRuleset = await getRulesetByName(octokit, repoFullName, 'Obsolete Integration Ruleset');
+  const rulesetSubResults = (result.subResults || []).filter(subResult => subResult.kind.startsWith('ruleset-'));
 
   assert(managedRuleset, `${repoFullName} should have the managed ruleset`);
   assert(obsoleteRuleset === null, `${repoFullName} should not have the obsolete ruleset anymore`);
@@ -369,6 +376,11 @@ async function assertRulesetsUpdateRepo(octokit, repoFullName, result) {
     ),
     `${repoFullName} should report the obsolete ruleset as deleted`
   );
+  assert(
+    result.rulesetSync?.deletedRulesets?.length === 1,
+    `${repoFullName} should report exactly one deleted unmanaged repo ruleset`
+  );
+  assert(rulesetSubResults.length === 2, `${repoFullName} should report exactly two ruleset sub-results`);
   const updateSubResult = assertSubResult(repoFullName, result, 'ruleset-update', 'changed', {
     rulesetName: 'Integration Branch Protection'
   });
