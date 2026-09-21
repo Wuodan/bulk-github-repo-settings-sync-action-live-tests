@@ -90,7 +90,7 @@ jobs:
 
     steps:
       - name: Checkout live tests
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Generate integration token
         id: auth
@@ -101,7 +101,7 @@ jobs:
           owner: ${{ vars.LIVE_TEST_ORG }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -147,10 +147,10 @@ jobs:
 
     steps:
       - name: Checkout live tests
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout action under test
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ needs.resolve-ref.outputs.repository }}
           ref: ${{ needs.resolve-ref.outputs.ref }}
@@ -165,7 +165,7 @@ jobs:
           owner: ${{ vars.LIVE_TEST_ORG }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -330,7 +330,7 @@ jobs:
 
     steps:
       - name: Checkout live tests
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Generate integration token
         id: auth
@@ -341,7 +341,7 @@ jobs:
           owner: ${{ vars.LIVE_TEST_ORG }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -382,10 +382,10 @@ jobs:
 
     steps:
       - name: Checkout live tests
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout action under test
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ needs.resolve-ref.outputs.repository }}
           ref: ${{ needs.resolve-ref.outputs.ref }}
@@ -400,7 +400,7 @@ jobs:
           owner: ${{ vars.LIVE_TEST_ORG }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -637,7 +637,7 @@ jobs:
 
     steps:
       - name: Checkout live tests
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Generate integration token
         id: auth
@@ -648,7 +648,7 @@ jobs:
           owner: ${{ vars.LIVE_TEST_ORG }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -683,10 +683,10 @@ jobs:
 
     steps:
       - name: Checkout live tests
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout action under test
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ needs.resolve-ref.outputs.repository }}
           ref: ${{ needs.resolve-ref.outputs.ref }}
@@ -701,7 +701,7 @@ jobs:
           owner: ${{ vars.LIVE_TEST_ORG }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
