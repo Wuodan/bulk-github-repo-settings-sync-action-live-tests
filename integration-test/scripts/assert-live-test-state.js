@@ -317,6 +317,32 @@ async function assertDependabotPrRepo(octokit, repoFullName, result, expectedSta
   });
 }
 
+async function assertDivergedDependabotPrRepo(octokit, repoFullName, result) {
+  const [owner, repo] = repoFullName.split('/');
+  const pulls = await listOpenPullRequestsForBranch(octokit, repoFullName, 'dependabot-yml-sync');
+  assert(pulls.length === 1, `${repoFullName} should have exactly one open Dependabot PR`);
+  const pull = pulls[0];
+  const { data: commit } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: pull.head.sha });
+  const { data: files } = await octokit.rest.pulls.listFiles({ owner, repo, pull_number: pull.number });
+
+  assert(
+    commit.parents.some(parent => parent.sha === pull.base.sha),
+    `${repoFullName} Dependabot PR should be rebuilt from the current default branch`
+  );
+  assertSortedStringArray(
+    files.map(file => file.filename),
+    ['.github/dependabot.yml'],
+    `${repoFullName} Dependabot PR should change only .github/dependabot.yml`
+  );
+  await assertDependabotPrRepo(
+    octokit,
+    repoFullName,
+    result,
+    'pr-updated',
+    'integration-test/sources/dependabot.yml'
+  );
+}
+
 async function assertGitignoreRepo(octokit, repoFullName, result) {
   await assertSinglePrFileSyncRepo(octokit, repoFullName, result, {
     branchName: 'gitignore-sync',
@@ -551,6 +577,37 @@ async function assertFileSyncRepo(octokit, repoFullName, result) {
   assert(renovateSync?.fileSync === 'created', `${repoFullName} Renovate file sync should create a PR`);
   assertPrMetadata(repoFullName, sync, pulls[0]);
   assertPrMetadata(repoFullName, renovateSync, renovatePulls[0]);
+  assertSubResult(repoFullName, result, 'file-sync');
+}
+
+async function assertDivergedFileSyncRepo(octokit, repoFullName, result) {
+  const [owner, repo] = repoFullName.split('/');
+  const pulls = await listOpenPullRequestsForBranch(octokit, repoFullName, 'file-sync');
+  assert(pulls.length === 1, `${repoFullName} should have exactly one open file-sync PR`);
+  const pull = pulls[0];
+  const { data: commit } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: pull.head.sha });
+  const { data: files } = await octokit.rest.pulls.listFiles({ owner, repo, pull_number: pull.number });
+
+  assert(
+    commit.parents.some(parent => parent.sha === pull.base.sha),
+    `${repoFullName} file-sync PR should be rebuilt from the current default branch`
+  );
+  assertSortedStringArray(
+    files.map(file => file.filename),
+    ['renovate.json'],
+    `${repoFullName} file-sync PR should change only renovate.json`
+  );
+  assert(
+    (await getFileContent(octokit, repoFullName, 'renovate.json', 'file-sync')) ===
+      readFixture('integration-test/sources/renovate.json'),
+    `${repoFullName} renovate.json should match its file-sync fixture`
+  );
+
+  const sync = result.fileSync?.[0];
+  assert(result.success === true, `${repoFullName} result should be successful`);
+  assert(sync?.success === true, `${repoFullName} file sync should be successful`);
+  assert(sync?.fileSync === 'pr-updated', `${repoFullName} file sync should rebuild the existing PR`);
+  assertPrMetadata(repoFullName, sync, pull);
   assertSubResult(repoFullName, result, 'file-sync');
 }
 
@@ -855,6 +912,8 @@ async function main() {
         await assertWorkflowFilesRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-file-sync-a')) {
         await assertFileSyncRepo(octokit, repoConfig.repo, result);
+      } else if (repoConfig.repo.endsWith('/it-file-sync-diverged-a')) {
+        await assertDivergedFileSyncRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-autolinks-a')) {
         await assertAutolinksRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-copilot-a')) {
@@ -917,6 +976,8 @@ async function main() {
           'pr-updated',
           'integration-test/sources/dependabot.yml'
         );
+      } else if (repoConfig.repo.endsWith('/it-pr-dependabot-diverged-a')) {
+        await assertDivergedDependabotPrRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-pr-workflows-created-a')) {
         await assertWorkflowPrRepo(octokit, repoConfig.repo, result, 'pr-updated-created');
       } else if (repoConfig.repo.endsWith('/it-pr-workflows-mixed-a')) {

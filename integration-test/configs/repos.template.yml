@@ -78,6 +78,12 @@ repos:
         source: ./integration-test/sources/modes
         target: bin
 
+  - repo: __LIVE_TEST_ORG__/it-file-sync-diverged-a
+    file-sync:
+      - name: Renovate configuration
+        source: ./integration-test/sources/renovate.json
+        target: renovate.json
+
   - repo: __LIVE_TEST_ORG__/it-autolinks-a
     autolinks-file: ./integration-test/sources/autolinks.json
 
@@ -115,6 +121,9 @@ repos:
     dependabot-yml: ./integration-test/sources/dependabot.yml
 
   - repo: __LIVE_TEST_ORG__/it-pr-updated-a
+    dependabot-yml: ./integration-test/sources/dependabot.yml
+
+  - repo: __LIVE_TEST_ORG__/it-pr-dependabot-diverged-a
     dependabot-yml: ./integration-test/sources/dependabot.yml
 
   - repo: __LIVE_TEST_ORG__/it-pr-workflows-created-a
