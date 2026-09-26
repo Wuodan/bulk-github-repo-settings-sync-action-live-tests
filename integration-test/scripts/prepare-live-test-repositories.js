@@ -448,6 +448,35 @@ async function resetDependabotPrRepo(octokit, repoFullName, mode) {
   });
 }
 
+async function resetDivergedDependabotPrRepo(octokit, repoFullName) {
+  info(`Resetting diverged Dependabot PR baseline for ${repoFullName}`);
+  const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'dependabot-yml-sync', [
+    '.github/dependabot.yml',
+    'default-branch-marker.md'
+  ]);
+  await putFileContent(
+    octokit,
+    repoFullName,
+    '.github/dependabot.yml',
+    readFixture('integration-test/baselines/dependabot.stale.yml'),
+    defaultBranch,
+    'chore: reset dependabot baseline for integration'
+  );
+  await seedOpenPr(octokit, repoFullName, {
+    branchName: 'dependabot-yml-sync',
+    title: 'chore: update dependabot.yml',
+    filesOnBranch: [{ path: '.github/dependabot.yml', content: readFixture('integration-test/sources/dependabot.yml') }]
+  });
+  await putFileContent(
+    octokit,
+    repoFullName,
+    'default-branch-marker.md',
+    'This commit makes the Dependabot PR branch stale.\n',
+    defaultBranch,
+    'chore: advance default branch for Dependabot integration'
+  );
+}
+
 async function resetWorkflowPrRepo(octokit, repoFullName, mode) {
   info(`Resetting workflow PR baseline for ${repoFullName}`);
   await resetPrSyncRepo(octokit, repoFullName, 'workflow-files-sync', [
@@ -540,6 +569,35 @@ async function resetDirectFileSyncRepo(octokit, repoFullName) {
   await resetPrSyncRepo(octokit, repoFullName, 'file-sync', ['renovate.json']);
 }
 
+async function resetDivergedFileSyncRepo(octokit, repoFullName) {
+  info(`Resetting diverged file sync baseline for ${repoFullName}`);
+  const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'file-sync', [
+    'renovate.json',
+    'default-branch-marker.md'
+  ]);
+  await putFileContent(
+    octokit,
+    repoFullName,
+    'renovate.json',
+    '{"extends":["config:base"]}\n',
+    defaultBranch,
+    'chore: reset renovate baseline for integration'
+  );
+  await seedOpenPr(octokit, repoFullName, {
+    branchName: 'file-sync',
+    title: 'chore: sync Renovate configuration',
+    filesOnBranch: [{ path: 'renovate.json', content: readFixture('integration-test/sources/renovate.json') }]
+  });
+  await putFileContent(
+    octokit,
+    repoFullName,
+    'default-branch-marker.md',
+    'This commit makes the file-sync PR branch stale.\n',
+    defaultBranch,
+    'chore: advance default branch for file-sync integration'
+  );
+}
+
 async function resetPackageJsonPrRepo(octokit, repoFullName, mode) {
   info(`Resetting package.json PR baseline for ${repoFullName}`);
   const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'package-json-sync');
@@ -617,6 +675,8 @@ async function resetRepo(octokit, repoConfig) {
     await resetWorkflowFilesRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-a')) {
     await resetFileSyncRepo(octokit, repoFullName);
+  } else if (repoFullName.endsWith('/it-file-sync-diverged-a')) {
+    await resetDivergedFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-direct-a')) {
     await resetDirectFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-autolinks-a')) {
@@ -647,6 +707,8 @@ async function resetRepo(octokit, repoConfig) {
     await resetDependabotPrRepo(octokit, repoFullName, 'up-to-date');
   } else if (repoFullName.endsWith('/it-pr-updated-a')) {
     await resetDependabotPrRepo(octokit, repoFullName, 'updated');
+  } else if (repoFullName.endsWith('/it-pr-dependabot-diverged-a')) {
+    await resetDivergedDependabotPrRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-pr-dry-run-update-a')) {
     await resetDependabotPrRepo(octokit, repoFullName, 'updated');
   } else if (repoFullName.endsWith('/it-pr-workflows-created-a')) {
