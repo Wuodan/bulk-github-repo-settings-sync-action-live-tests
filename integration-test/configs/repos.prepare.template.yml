@@ -19,6 +19,7 @@ repos:
   - repo: __LIVE_TEST_ORG__/it-workflows-a
   - repo: __LIVE_TEST_ORG__/it-file-sync-a
   - repo: __LIVE_TEST_ORG__/it-file-sync-diverged-a
+  - repo: __LIVE_TEST_ORG__/it-file-sync-ancestor-a
   - repo: __LIVE_TEST_ORG__/it-file-sync-direct-a
   - repo: __LIVE_TEST_ORG__/it-autolinks-a
   - repo: __LIVE_TEST_ORG__/it-copilot-a
