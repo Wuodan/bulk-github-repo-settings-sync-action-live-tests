@@ -554,6 +554,37 @@ async function assertFileSyncRepo(octokit, repoFullName, result) {
   assertSubResult(repoFullName, result, 'file-sync');
 }
 
+async function assertDivergedFileSyncRepo(octokit, repoFullName, result) {
+  const [owner, repo] = repoFullName.split('/');
+  const pulls = await listOpenPullRequestsForBranch(octokit, repoFullName, 'file-sync');
+  assert(pulls.length === 1, `${repoFullName} should have exactly one open file-sync PR`);
+  const pull = pulls[0];
+  const { data: commit } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: pull.head.sha });
+  const { data: files } = await octokit.rest.pulls.listFiles({ owner, repo, pull_number: pull.number });
+
+  assert(
+    commit.parents.some(parent => parent.sha === pull.base.sha),
+    `${repoFullName} file-sync PR should be rebuilt from the current default branch`
+  );
+  assertSortedStringArray(
+    files.map(file => file.filename),
+    ['renovate.json'],
+    `${repoFullName} file-sync PR should change only renovate.json`
+  );
+  assert(
+    (await getFileContent(octokit, repoFullName, 'renovate.json', 'file-sync')) ===
+      readFixture('integration-test/sources/renovate.json'),
+    `${repoFullName} renovate.json should match its file-sync fixture`
+  );
+
+  const sync = result.fileSync?.[0];
+  assert(result.success === true, `${repoFullName} result should be successful`);
+  assert(sync?.success === true, `${repoFullName} file sync should be successful`);
+  assert(sync?.fileSync === 'pr-updated', `${repoFullName} file sync should rebuild the existing PR`);
+  assertPrMetadata(repoFullName, sync, pull);
+  assertSubResult(repoFullName, result, 'file-sync');
+}
+
 async function assertWorkflowPrRepo(octokit, repoFullName, result, expectedStatus) {
   const pulls = await listOpenPullRequestsForBranch(octokit, repoFullName, 'workflow-files-sync');
   assert(pulls.length === 1, `${repoFullName} should have exactly one open workflow files PR`);
@@ -803,8 +834,8 @@ async function main() {
     const { repos } = readIntegrationConfig();
     const results = parseResultsOutput();
 
-    assert(parseIntegerOutput('ACTION_UPDATED_REPOSITORIES') === 37, 'updated-repositories should equal 37');
-    assert(parseIntegerOutput('ACTION_CHANGED_REPOSITORIES') === 33, 'changed-repositories should equal 33');
+    assert(parseIntegerOutput('ACTION_UPDATED_REPOSITORIES') === 38, 'updated-repositories should equal 38');
+    assert(parseIntegerOutput('ACTION_CHANGED_REPOSITORIES') === 34, 'changed-repositories should equal 34');
     assert(parseIntegerOutput('ACTION_PENDING_REPOSITORIES') === 2, 'pending-repositories should equal 2');
     assert(parseIntegerOutput('ACTION_UNCHANGED_REPOSITORIES') === 2, 'unchanged-repositories should equal 2');
     assert(parseIntegerOutput('ACTION_FAILED_REPOSITORIES') === 0, 'failed-repositories should equal 0');
@@ -855,6 +886,8 @@ async function main() {
         await assertWorkflowFilesRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-file-sync-a')) {
         await assertFileSyncRepo(octokit, repoConfig.repo, result);
+      } else if (repoConfig.repo.endsWith('/it-file-sync-diverged-a')) {
+        await assertDivergedFileSyncRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-autolinks-a')) {
         await assertAutolinksRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-copilot-a')) {

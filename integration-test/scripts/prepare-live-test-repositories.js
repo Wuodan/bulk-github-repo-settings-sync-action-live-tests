@@ -540,6 +540,35 @@ async function resetDirectFileSyncRepo(octokit, repoFullName) {
   await resetPrSyncRepo(octokit, repoFullName, 'file-sync', ['renovate.json']);
 }
 
+async function resetDivergedFileSyncRepo(octokit, repoFullName) {
+  info(`Resetting diverged file sync baseline for ${repoFullName}`);
+  const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'file-sync', [
+    'renovate.json',
+    'default-branch-marker.md'
+  ]);
+  await putFileContent(
+    octokit,
+    repoFullName,
+    'renovate.json',
+    '{"extends":["config:base"]}\n',
+    defaultBranch,
+    'chore: reset renovate baseline for integration'
+  );
+  await seedOpenPr(octokit, repoFullName, {
+    branchName: 'file-sync',
+    title: 'chore: sync Renovate configuration',
+    filesOnBranch: [{ path: 'renovate.json', content: readFixture('integration-test/sources/renovate.json') }]
+  });
+  await putFileContent(
+    octokit,
+    repoFullName,
+    'default-branch-marker.md',
+    'This commit makes the file-sync PR branch stale.\n',
+    defaultBranch,
+    'chore: advance default branch for file-sync integration'
+  );
+}
+
 async function resetPackageJsonPrRepo(octokit, repoFullName, mode) {
   info(`Resetting package.json PR baseline for ${repoFullName}`);
   const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'package-json-sync');
@@ -617,6 +646,8 @@ async function resetRepo(octokit, repoConfig) {
     await resetWorkflowFilesRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-a')) {
     await resetFileSyncRepo(octokit, repoFullName);
+  } else if (repoFullName.endsWith('/it-file-sync-diverged-a')) {
+    await resetDivergedFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-direct-a')) {
     await resetDirectFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-autolinks-a')) {
