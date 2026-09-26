@@ -611,6 +611,31 @@ async function assertDivergedFileSyncRepo(octokit, repoFullName, result) {
   assertSubResult(repoFullName, result, 'file-sync');
 }
 
+async function assertAncestorFileSyncRepo(octokit, repoFullName, result) {
+  const [owner, repo] = repoFullName.split('/');
+  const pulls = await listOpenPullRequestsForBranch(octokit, repoFullName, 'file-sync');
+  assert(pulls.length === 1, `${repoFullName} should have exactly one open file-sync PR`);
+  const pull = pulls[0];
+  const { data: commit } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: pull.head.sha });
+
+  assert(
+    !commit.parents.some(parent => parent.sha === pull.base.sha),
+    `${repoFullName} PR head should have an intermediate commit after the default branch`
+  );
+  assert(
+    (await getFileContent(octokit, repoFullName, 'pr-branch-marker.md', 'file-sync')) ===
+      'This extra commit verifies ancestor-based PR freshness.\n',
+    `${repoFullName} PR branch marker should be retained`
+  );
+
+  const sync = result.fileSync?.[0];
+  assert(result.success === true, `${repoFullName} result should be successful`);
+  assert(sync?.success === true, `${repoFullName} file sync should be successful`);
+  assert(sync?.fileSync === 'pr-up-to-date', `${repoFullName} file sync should not rebuild the existing PR`);
+  assertPrMetadata(repoFullName, sync, pull);
+  assertSubResult(repoFullName, result, 'file-sync', 'pending');
+}
+
 async function assertWorkflowPrRepo(octokit, repoFullName, result, expectedStatus) {
   const pulls = await listOpenPullRequestsForBranch(octokit, repoFullName, 'workflow-files-sync');
   assert(pulls.length === 1, `${repoFullName} should have exactly one open workflow files PR`);
@@ -860,9 +885,9 @@ async function main() {
     const { repos } = readIntegrationConfig();
     const results = parseResultsOutput();
 
-    assert(parseIntegerOutput('ACTION_UPDATED_REPOSITORIES') === 37, 'updated-repositories should equal 37');
-    assert(parseIntegerOutput('ACTION_CHANGED_REPOSITORIES') === 33, 'changed-repositories should equal 33');
-    assert(parseIntegerOutput('ACTION_PENDING_REPOSITORIES') === 2, 'pending-repositories should equal 2');
+    assert(parseIntegerOutput('ACTION_UPDATED_REPOSITORIES') === 40, 'updated-repositories should equal 40');
+    assert(parseIntegerOutput('ACTION_CHANGED_REPOSITORIES') === 35, 'changed-repositories should equal 35');
+    assert(parseIntegerOutput('ACTION_PENDING_REPOSITORIES') === 3, 'pending-repositories should equal 3');
     assert(parseIntegerOutput('ACTION_UNCHANGED_REPOSITORIES') === 2, 'unchanged-repositories should equal 2');
     assert(parseIntegerOutput('ACTION_FAILED_REPOSITORIES') === 0, 'failed-repositories should equal 0');
     assert(parseIntegerOutput('ACTION_WARNING_REPOSITORIES') === 1, 'warning-repositories should equal 1');
@@ -914,6 +939,8 @@ async function main() {
         await assertFileSyncRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-file-sync-diverged-a')) {
         await assertDivergedFileSyncRepo(octokit, repoConfig.repo, result);
+      } else if (repoConfig.repo.endsWith('/it-file-sync-ancestor-a')) {
+        await assertAncestorFileSyncRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-autolinks-a')) {
         await assertAutolinksRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-copilot-a')) {
