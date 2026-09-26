@@ -317,6 +317,32 @@ async function assertDependabotPrRepo(octokit, repoFullName, result, expectedSta
   });
 }
 
+async function assertDivergedDependabotPrRepo(octokit, repoFullName, result) {
+  const [owner, repo] = repoFullName.split('/');
+  const pulls = await listOpenPullRequestsForBranch(octokit, repoFullName, 'dependabot-yml-sync');
+  assert(pulls.length === 1, `${repoFullName} should have exactly one open Dependabot PR`);
+  const pull = pulls[0];
+  const { data: commit } = await octokit.rest.git.getCommit({ owner, repo, commit_sha: pull.head.sha });
+  const { data: files } = await octokit.rest.pulls.listFiles({ owner, repo, pull_number: pull.number });
+
+  assert(
+    commit.parents.some(parent => parent.sha === pull.base.sha),
+    `${repoFullName} Dependabot PR should be rebuilt from the current default branch`
+  );
+  assertSortedStringArray(
+    files.map(file => file.filename),
+    ['.github/dependabot.yml'],
+    `${repoFullName} Dependabot PR should change only .github/dependabot.yml`
+  );
+  await assertDependabotPrRepo(
+    octokit,
+    repoFullName,
+    result,
+    'pr-updated',
+    'integration-test/sources/dependabot.yml'
+  );
+}
+
 async function assertGitignoreRepo(octokit, repoFullName, result) {
   await assertSinglePrFileSyncRepo(octokit, repoFullName, result, {
     branchName: 'gitignore-sync',
@@ -834,8 +860,8 @@ async function main() {
     const { repos } = readIntegrationConfig();
     const results = parseResultsOutput();
 
-    assert(parseIntegerOutput('ACTION_UPDATED_REPOSITORIES') === 38, 'updated-repositories should equal 38');
-    assert(parseIntegerOutput('ACTION_CHANGED_REPOSITORIES') === 34, 'changed-repositories should equal 34');
+    assert(parseIntegerOutput('ACTION_UPDATED_REPOSITORIES') === 39, 'updated-repositories should equal 39');
+    assert(parseIntegerOutput('ACTION_CHANGED_REPOSITORIES') === 35, 'changed-repositories should equal 35');
     assert(parseIntegerOutput('ACTION_PENDING_REPOSITORIES') === 2, 'pending-repositories should equal 2');
     assert(parseIntegerOutput('ACTION_UNCHANGED_REPOSITORIES') === 2, 'unchanged-repositories should equal 2');
     assert(parseIntegerOutput('ACTION_FAILED_REPOSITORIES') === 0, 'failed-repositories should equal 0');
@@ -950,6 +976,8 @@ async function main() {
           'pr-updated',
           'integration-test/sources/dependabot.yml'
         );
+      } else if (repoConfig.repo.endsWith('/it-pr-dependabot-diverged-a')) {
+        await assertDivergedDependabotPrRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-pr-workflows-created-a')) {
         await assertWorkflowPrRepo(octokit, repoConfig.repo, result, 'pr-updated-created');
       } else if (repoConfig.repo.endsWith('/it-pr-workflows-mixed-a')) {

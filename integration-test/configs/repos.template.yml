@@ -123,6 +123,9 @@ repos:
   - repo: __LIVE_TEST_ORG__/it-pr-updated-a
     dependabot-yml: ./integration-test/sources/dependabot.yml
 
+  - repo: __LIVE_TEST_ORG__/it-pr-dependabot-diverged-a
+    dependabot-yml: ./integration-test/sources/dependabot.yml
+
   - repo: __LIVE_TEST_ORG__/it-pr-workflows-created-a
     workflow-files:
       - ./integration-test/sources/workflow-ci.yml

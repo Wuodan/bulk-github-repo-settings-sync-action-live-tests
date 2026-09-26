@@ -30,6 +30,7 @@ repos:
   - repo: __LIVE_TEST_ORG__/it-codeowners-vars-a
   - repo: __LIVE_TEST_ORG__/it-pr-up-to-date-a
   - repo: __LIVE_TEST_ORG__/it-pr-updated-a
+  - repo: __LIVE_TEST_ORG__/it-pr-dependabot-diverged-a
   - repo: __LIVE_TEST_ORG__/it-pr-dry-run-update-a
   - repo: __LIVE_TEST_ORG__/it-pr-workflows-created-a
   - repo: __LIVE_TEST_ORG__/it-pr-workflows-mixed-a
