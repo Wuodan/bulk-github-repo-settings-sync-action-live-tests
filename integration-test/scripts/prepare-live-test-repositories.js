@@ -441,6 +441,13 @@ async function resetDependabotPrRepo(octokit, repoFullName, mode) {
     }
   ];
 
+  if (mode === 'up-to-date') {
+    filesOnBranch.push({
+      path: 'pr-branch-marker.md',
+      content: 'This extra commit verifies ancestor-based PR freshness.\n'
+    });
+  }
+
   await seedOpenPr(octokit, repoFullName, {
     branchName: 'dependabot-yml-sync',
     title: 'chore: update dependabot.yml',
@@ -598,6 +605,30 @@ async function resetDivergedFileSyncRepo(octokit, repoFullName) {
   );
 }
 
+async function resetAncestorFileSyncRepo(octokit, repoFullName) {
+  info(`Resetting ancestor file-sync PR baseline for ${repoFullName}`);
+  const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'file-sync', [
+    'renovate.json',
+    'pr-branch-marker.md'
+  ]);
+  await putFileContent(
+    octokit,
+    repoFullName,
+    'renovate.json',
+    '{"extends":["config:base"]}\n',
+    defaultBranch,
+    'chore: reset renovate baseline for integration'
+  );
+  await seedOpenPr(octokit, repoFullName, {
+    branchName: 'file-sync',
+    title: 'chore: sync Renovate configuration',
+    filesOnBranch: [
+      { path: 'renovate.json', content: readFixture('integration-test/sources/renovate.json') },
+      { path: 'pr-branch-marker.md', content: 'This extra commit verifies ancestor-based PR freshness.\n' }
+    ]
+  });
+}
+
 async function resetPackageJsonPrRepo(octokit, repoFullName, mode) {
   info(`Resetting package.json PR baseline for ${repoFullName}`);
   const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'package-json-sync');
@@ -677,6 +708,8 @@ async function resetRepo(octokit, repoConfig) {
     await resetFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-diverged-a')) {
     await resetDivergedFileSyncRepo(octokit, repoFullName);
+  } else if (repoFullName.endsWith('/it-file-sync-ancestor-a')) {
+    await resetAncestorFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-direct-a')) {
     await resetDirectFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-autolinks-a')) {
