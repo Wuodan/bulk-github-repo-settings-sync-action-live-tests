@@ -455,8 +455,8 @@ async function resetDependabotPrRepo(octokit, repoFullName, mode) {
   });
 }
 
-async function resetDivergedDependabotPrRepo(octokit, repoFullName) {
-  info(`Resetting diverged Dependabot PR baseline for ${repoFullName}`);
+async function resetDivergedDependabotPrRepo(octokit, repoFullName, rewriteTargetHistory = false) {
+  info(`Resetting ${rewriteTargetHistory ? 'rewritten' : 'diverged'} Dependabot PR baseline for ${repoFullName}`);
   const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'dependabot-yml-sync', [
     '.github/dependabot.yml',
     'default-branch-marker.md'
@@ -469,18 +469,53 @@ async function resetDivergedDependabotPrRepo(octokit, repoFullName) {
     defaultBranch,
     'chore: reset dependabot baseline for integration'
   );
+  if (rewriteTargetHistory) {
+    await putFileContent(
+      octokit,
+      repoFullName,
+      'default-branch-marker.md',
+      'This commit will be replaced by a target-history rewrite.\n',
+      defaultBranch,
+      'chore: advance default branch before Dependabot integration'
+    );
+  }
   await seedOpenPr(octokit, repoFullName, {
     branchName: 'dependabot-yml-sync',
     title: 'chore: update dependabot.yml',
     filesOnBranch: [{ path: '.github/dependabot.yml', content: readFixture('integration-test/sources/dependabot.yml') }]
   });
+  if (rewriteTargetHistory) {
+    const [owner, repo] = repoFullName.split('/');
+    const { data: defaultRef } = await octokit.rest.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${defaultBranch}`
+    });
+    const { data: defaultCommit } = await octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: defaultRef.object.sha
+    });
+    await octokit.rest.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${defaultBranch}`,
+      sha: defaultCommit.parents[0].sha,
+      force: true
+    });
+    await paceMutation();
+  }
   await putFileContent(
     octokit,
     repoFullName,
     'default-branch-marker.md',
-    'This commit makes the Dependabot PR branch stale.\n',
+    rewriteTargetHistory
+      ? 'This commit replaces target history after the Dependabot PR was created.\n'
+      : 'This commit makes the Dependabot PR branch stale.\n',
     defaultBranch,
-    'chore: advance default branch for Dependabot integration'
+    rewriteTargetHistory
+      ? 'chore: rewrite default branch for Dependabot integration'
+      : 'chore: advance default branch for Dependabot integration'
   );
 }
 
@@ -576,8 +611,8 @@ async function resetDirectFileSyncRepo(octokit, repoFullName) {
   await resetPrSyncRepo(octokit, repoFullName, 'file-sync', ['renovate.json']);
 }
 
-async function resetDivergedFileSyncRepo(octokit, repoFullName) {
-  info(`Resetting diverged file sync baseline for ${repoFullName}`);
+async function resetDivergedFileSyncRepo(octokit, repoFullName, rewriteTargetHistory = false) {
+  info(`Resetting ${rewriteTargetHistory ? 'rewritten' : 'diverged'} file sync baseline for ${repoFullName}`);
   const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'file-sync', [
     'renovate.json',
     'default-branch-marker.md'
@@ -590,18 +625,53 @@ async function resetDivergedFileSyncRepo(octokit, repoFullName) {
     defaultBranch,
     'chore: reset renovate baseline for integration'
   );
+  if (rewriteTargetHistory) {
+    await putFileContent(
+      octokit,
+      repoFullName,
+      'default-branch-marker.md',
+      'This commit will be replaced by a target-history rewrite.\n',
+      defaultBranch,
+      'chore: advance default branch before file-sync integration'
+    );
+  }
   await seedOpenPr(octokit, repoFullName, {
     branchName: 'file-sync',
     title: 'chore: sync Renovate configuration',
     filesOnBranch: [{ path: 'renovate.json', content: readFixture('integration-test/sources/renovate.json') }]
   });
+  if (rewriteTargetHistory) {
+    const [owner, repo] = repoFullName.split('/');
+    const { data: defaultRef } = await octokit.rest.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${defaultBranch}`
+    });
+    const { data: defaultCommit } = await octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: defaultRef.object.sha
+    });
+    await octokit.rest.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${defaultBranch}`,
+      sha: defaultCommit.parents[0].sha,
+      force: true
+    });
+    await paceMutation();
+  }
   await putFileContent(
     octokit,
     repoFullName,
     'default-branch-marker.md',
-    'This commit makes the file-sync PR branch stale.\n',
+    rewriteTargetHistory
+      ? 'This commit replaces target history after the file-sync PR was created.\n'
+      : 'This commit makes the file-sync PR branch stale.\n',
     defaultBranch,
-    'chore: advance default branch for file-sync integration'
+    rewriteTargetHistory
+      ? 'chore: rewrite default branch for file-sync integration'
+      : 'chore: advance default branch for file-sync integration'
   );
 }
 
@@ -708,6 +778,8 @@ async function resetRepo(octokit, repoConfig) {
     await resetFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-diverged-a')) {
     await resetDivergedFileSyncRepo(octokit, repoFullName);
+  } else if (repoFullName.endsWith('/it-file-sync-rewritten-a')) {
+    await resetDivergedFileSyncRepo(octokit, repoFullName, true);
   } else if (repoFullName.endsWith('/it-file-sync-ancestor-a')) {
     await resetAncestorFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-direct-a')) {
@@ -742,6 +814,8 @@ async function resetRepo(octokit, repoConfig) {
     await resetDependabotPrRepo(octokit, repoFullName, 'updated');
   } else if (repoFullName.endsWith('/it-pr-dependabot-diverged-a')) {
     await resetDivergedDependabotPrRepo(octokit, repoFullName);
+  } else if (repoFullName.endsWith('/it-pr-dependabot-rewritten-a')) {
+    await resetDivergedDependabotPrRepo(octokit, repoFullName, true);
   } else if (repoFullName.endsWith('/it-pr-dry-run-update-a')) {
     await resetDependabotPrRepo(octokit, repoFullName, 'updated');
   } else if (repoFullName.endsWith('/it-pr-workflows-created-a')) {

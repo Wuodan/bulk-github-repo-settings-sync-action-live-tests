@@ -885,8 +885,8 @@ async function main() {
     const { repos } = readIntegrationConfig();
     const results = parseResultsOutput();
 
-    assert(parseIntegerOutput('ACTION_UPDATED_REPOSITORIES') === 40, 'updated-repositories should equal 40');
-    assert(parseIntegerOutput('ACTION_CHANGED_REPOSITORIES') === 35, 'changed-repositories should equal 35');
+    assert(parseIntegerOutput('ACTION_UPDATED_REPOSITORIES') === 42, 'updated-repositories should equal 42');
+    assert(parseIntegerOutput('ACTION_CHANGED_REPOSITORIES') === 37, 'changed-repositories should equal 37');
     assert(parseIntegerOutput('ACTION_PENDING_REPOSITORIES') === 3, 'pending-repositories should equal 3');
     assert(parseIntegerOutput('ACTION_UNCHANGED_REPOSITORIES') === 2, 'unchanged-repositories should equal 2');
     assert(parseIntegerOutput('ACTION_FAILED_REPOSITORIES') === 0, 'failed-repositories should equal 0');
@@ -938,6 +938,8 @@ async function main() {
       } else if (repoConfig.repo.endsWith('/it-file-sync-a')) {
         await assertFileSyncRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-file-sync-diverged-a')) {
+        await assertDivergedFileSyncRepo(octokit, repoConfig.repo, result);
+      } else if (repoConfig.repo.endsWith('/it-file-sync-rewritten-a')) {
         await assertDivergedFileSyncRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-file-sync-ancestor-a')) {
         await assertAncestorFileSyncRepo(octokit, repoConfig.repo, result);
@@ -1004,6 +1006,8 @@ async function main() {
           'integration-test/sources/dependabot.yml'
         );
       } else if (repoConfig.repo.endsWith('/it-pr-dependabot-diverged-a')) {
+        await assertDivergedDependabotPrRepo(octokit, repoConfig.repo, result);
+      } else if (repoConfig.repo.endsWith('/it-pr-dependabot-rewritten-a')) {
         await assertDivergedDependabotPrRepo(octokit, repoConfig.repo, result);
       } else if (repoConfig.repo.endsWith('/it-pr-workflows-created-a')) {
         await assertWorkflowPrRepo(octokit, repoConfig.repo, result, 'pr-updated-created');
