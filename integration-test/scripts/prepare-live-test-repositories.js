@@ -441,13 +441,6 @@ async function resetDependabotPrRepo(octokit, repoFullName, mode) {
     }
   ];
 
-  if (mode === 'up-to-date') {
-    filesOnBranch.push({
-      path: 'pr-branch-marker.md',
-      content: 'This extra commit verifies ancestor-based PR freshness.\n'
-    });
-  }
-
   await seedOpenPr(octokit, repoFullName, {
     branchName: 'dependabot-yml-sync',
     title: 'chore: update dependabot.yml',
@@ -675,8 +668,8 @@ async function resetDivergedFileSyncRepo(octokit, repoFullName, rewriteTargetHis
   );
 }
 
-async function resetAncestorFileSyncRepo(octokit, repoFullName) {
-  info(`Resetting ancestor file-sync PR baseline for ${repoFullName}`);
+async function resetExtraCommitFileSyncRepo(octokit, repoFullName) {
+  info(`Resetting file-sync PR baseline with an extra commit for ${repoFullName}`);
   const defaultBranch = await resetPrSyncRepo(octokit, repoFullName, 'file-sync', [
     'renovate.json',
     'pr-branch-marker.md'
@@ -694,7 +687,7 @@ async function resetAncestorFileSyncRepo(octokit, repoFullName) {
     title: 'chore: sync Renovate configuration',
     filesOnBranch: [
       { path: 'renovate.json', content: readFixture('integration-test/sources/renovate.json') },
-      { path: 'pr-branch-marker.md', content: 'This extra commit verifies ancestor-based PR freshness.\n' }
+      { path: 'pr-branch-marker.md', content: 'This extra commit verifies sync PR branch refresh.\n' }
     ]
   });
 }
@@ -781,7 +774,7 @@ async function resetRepo(octokit, repoConfig) {
   } else if (repoFullName.endsWith('/it-file-sync-rewritten-a')) {
     await resetDivergedFileSyncRepo(octokit, repoFullName, true);
   } else if (repoFullName.endsWith('/it-file-sync-ancestor-a')) {
-    await resetAncestorFileSyncRepo(octokit, repoFullName);
+    await resetExtraCommitFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-file-sync-direct-a')) {
     await resetDirectFileSyncRepo(octokit, repoFullName);
   } else if (repoFullName.endsWith('/it-autolinks-a')) {
